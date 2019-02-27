@@ -2,7 +2,18 @@ import React, { Component } from 'react';
 import './App.css';
 import Form from "react-jsonschema-form";
 
-class FormWrapper extends Component {
+class Item extends Component {
+  render() {
+    const { item, onClickFunc } = this.props;
+    return (
+      <li key={item.id} onClick={() => {onClickFunc(item)}}>
+        {item.id} - {item.bezeichnung}
+      </li>
+    );
+  }
+}
+
+class App extends Component {
   constructor() {
     super();
     this.state = {
@@ -16,7 +27,7 @@ class FormWrapper extends Component {
     const GET_RESULT = `${GET_SCHEMA}?format=json`;
 
     this.fetchSchema(GET_SCHEMA);
-    this.fetchResult(GET_RESULT);
+    this.fetchResults(GET_RESULT);
   }
 
   fetchSchema(url) {
@@ -35,7 +46,7 @@ class FormWrapper extends Component {
     })
   }
 
-  fetchResult(url) {
+  fetchResults(url) {
     fetch(url, {
       method: 'GET',
     }).then(data => {
@@ -43,45 +54,52 @@ class FormWrapper extends Component {
         data.json().then(json => {
           this.setState({
             results: json.results,
-            formData: json.results[0],
           });
         });
       }
     });
   }
 
-  render() {
-    if (this.state.formData) {
-      const listResults = this.state.results.map((item) =>
-        <li key={item.id}>{item.id} - {item.bezeichnung}</li>);
+  renderResults() {
+    const onClickFunc = (item) => {
+      this.setState({
+        formData: item,
+      });
+    };
+    const listResults = this.state.results.map((item) =>
+      <Item key={item.id} item={item} onClickFunc={onClickFunc}/>
+    );
 
-      return (
-        <div className="App-form-wrapper">
-          <div className="App-results-wrapper">
-            Results:
-            <ul>{listResults}</ul>
-          </div>
-
-          Form:
-          <Form
-            schema={this.state.schema}
-            uiSchema={this.state.uiSchema}
-            formData={this.state.formData}
-            className="App-form"
-          />
-        </div>
-      );
-    }
-    return null;
+    return (
+      <div className="App-results-wrapper">
+        Results
+        <ul>{listResults}</ul>
+      </div>
+    )
   }
-}
 
-class App extends Component {
+  renderForm() {
+    return (
+      <div>
+        Form:
+        <Form
+          schema={this.state.schema}
+          uiSchema={this.state.uiSchema}
+          formData={this.state.formData}
+          className="App-form"
+        />
+      </div>
+    )
+  }
+
   render() {
     return (
       <div className="App">
         <header className="App-header">
-          <FormWrapper />
+        <div className="App-form-wrapper">
+          {(this.state.results ? this.renderResults() : null)}
+          {(this.state.schema ? this.renderForm() : null)}
+        </div>
         </header>
       </div>
     );
